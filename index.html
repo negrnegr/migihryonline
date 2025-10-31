@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Collector ⭐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, rgba(30, 30, 35, 0.98), rgba(20, 20, 25, 0.98));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(25, 25, 30, 0.95), rgba(18, 18, 23, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+        
+        #gameHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 30px;
+        }
+        
+        #score, #timer {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(200, 200, 200, 0.8), rgba(255, 255, 255, 0.9));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        #gameCanvas {
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            cursor: none;
+            background: rgba(15, 15, 20, 0.9);
+        }
+        
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(25, 25, 30, 0.98), rgba(18, 18, 23, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 40px 50px;
+            border-radius: 4px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        
+        #gameOver h2 {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(200, 200, 200, 0.85), rgba(255, 255, 255, 0.95));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        #gameOver p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 20px;
+            margin-bottom: 25px;
+        }
+        
+        #gameOver button {
+            background: rgba(80, 80, 90, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 12px 35px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #gameOver button:hover {
+            background: rgba(100, 100, 110, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+        }
+
+        #gameSelector {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .game-btn {
+            background: rgba(80, 80, 90, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 10px 25px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-btn:hover {
+            background: rgba(100, 100, 110, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .game-btn.active {
+            background: rgba(100, 100, 110, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 1);
+        }
+
+        #starCollectorGame, #minesweeperGame {
+            display: none;
+        }
+
+        #starCollectorGame.active, #minesweeperGame.active {
+            display: block;
+        }
+
+        #minesweeperBoard {
+            display: grid;
+            gap: 2px;
+            background: rgba(15, 15, 20, 0.9);
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .mine-cell {
+            width: 40px;
+            height: 40px;
+            background: rgba(80, 80, 90, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .mine-cell:hover:not(.revealed) {
+            background: rgba(100, 100, 110, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .mine-cell.revealed {
+            background: rgba(40, 40, 45, 0.9);
+            cursor: default;
+        }
+
+        .mine-cell.star {
+            background: rgba(60, 60, 70, 0.9);
+        }
+
+        .mine-cell.mine {
+            background: rgba(139, 0, 0, 0.8);
+        }
+
+        #minesweeperSettings {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #minesweeperSettings label {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #minesweeperSettings input[type="range"] {
+            width: 200px;
+            height: 6px;
+            background: rgba(40, 40, 45, 0.9);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #minesweeperSettings input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, rgba(220, 220, 230, 1), rgba(240, 240, 250, 1));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #minesweeperSettings input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, rgba(220, 220, 230, 1), rgba(240, 240, 250, 1));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        #mineCount {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        #starCollectorSettings {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #sensitivityControl {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(25, 25, 30, 0.95), rgba(18, 18, 23, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        #sensitivityControl label {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 12px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #sensitivityControl input[type="range"] {
+            width: 120px;
+            height: 4px;
+            background: rgba(40, 40, 45, 0.9);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #sensitivityControl input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, rgba(220, 220, 230, 1), rgba(240, 240, 250, 1));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #sensitivityControl input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, rgba(220, 220, 230, 1), rgba(240, 240, 250, 1));
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        #sensitivityValue {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        #fallingStarsGame {
+            display: none;
+        }
+
+        #fallingStarsGame.active {
+            display: block;
+        }
+
+        #fallingCanvas {
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            background: rgba(15, 15, 20, 0.9);
+        }
+
+        .creator-credit {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sensitivityControl">
+        <label>Sensitivity</label>
+        <input type="range" id="sensitivitySlider" min="1" max="50" value="15" oninput="updateSensitivity()">
+        <span id="sensitivityValue">15</span>
+    </div>
+
+    <div id="gameContainer">
+        <div id="gameSelector">
+            <button class="game-btn active" onclick="switchGame('starCollector')">Star Collector</button>
+            <button class="game-btn" onclick="switchGame('minesweeper')">Minesweeper</button>
+            <button class="game-btn" onclick="switchGame('fallingStars')">Falling Stars</button>
+        </div>
+
+        <div id="starCollectorGame" class="active">
+            <div id="starCollectorSettings">
+                <button class="game-btn" onclick="restartStarCollector()">Start Game</button>
+            </div>
+            <div id="gameHeader">
+                <div id="score">Score: 0</div>
+                <div id="timer">Time: 0s</div>
+            </div>
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+        </div>
+
+        <div id="minesweeperGame">
+            <div id="minesweeperSettings">
+                <label>Mines:</label>
+                <input type="range" id="mineSlider" min="1" max="50" value="5" oninput="updateMineCount()">
+                <span id="mineCount">5</span>
+                <button class="game-btn" onclick="startMinesweeper()" style="margin-left: 15px;">Start Game</button>
+            </div>
+            <div id="gameHeader">
+                <div id="score">Cells: 0/0</div>
+                <div id="timer">Time: 0s</div>
+            </div>
+            <div id="minesweeperBoard"></div>
+        </div>
+
+        <div id="fallingStarsGame">
+            <div id="starCollectorSettings">
+                <button class="game-btn" onclick="startFallingStars()">Start Game</button>
+            </div>
+            <div id="gameHeader">
+                <div id="score">Score: 0</div>
+                <div id="timer">Time: 0s</div>
+            </div>
+            <canvas id="fallingCanvas" width="600" height="500"></canvas>
+        </div>
+    </div>
+
+    <div class="creator-credit">created by migi</div>
+    
+    <div id="gameOver">
+        <h2>Game Over! 🎮</h2>
+        <p>Your Score: <span id="finalScore">0</span></p>
+        <button onclick="restartGame()">Play Again</button>
+    </div>
+
+    <div id="gameWin" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(25, 25, 30, 0.98), rgba(18, 18, 23, 0.98)); border: 1px solid rgba(255, 255, 255, 0.12); padding: 40px 50px; border-radius: 4px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);">
+        <h2 style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(200, 200, 200, 0.85), rgba(255, 255, 255, 0.95)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px; font-size: 36px; font-weight: 600; letter-spacing: 0.5px;">🏆 Victory! 🏆</h2>
+        <p style="color: rgba(255, 255, 255, 0.7); font-size: 20px; margin-bottom: 25px;">You reached the maximum score of 10000!</p>
+        <button onclick="restartGame()" style="background: rgba(80, 80, 90, 0.8); border: 1px solid rgba(255, 255, 255, 0.15); color: rgba(255, 255, 255, 0.85); padding: 12px 35px; font-size: 16px; font-weight: 600; border-radius: 3px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 1px;">Play Again</button>
+    </div>
+
+    <script>
+        let currentGame = 'starCollector';
+        let timerInterval = null;
+        let elapsedTime = 0;
+        let sensitivity = 0.15;
+
+        function updateSensitivity() {
+            const slider = document.getElementById('sensitivitySlider');
+            const display = document.getElementById('sensitivityValue');
+            display.textContent = slider.value;
+            sensitivity = slider.value / 100;
+        }
+
+        function switchGame(game) {
+            currentGame = game;
+            
+            document.querySelectorAll('.game-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('starCollectorGame').classList.remove('active');
+            document.getElementById('minesweeperGame').classList.remove('active');
+            document.getElementById('fallingStarsGame').classList.remove('active');
+            
+            if (game === 'starCollector') {
+                document.getElementById('starCollectorGame').classList.add('active');
+                restartStarCollector();
+            } else if (game === 'minesweeper') {
+                document.getElementById('minesweeperGame').classList.add('active');
+                stopTimer();
+                elapsedTime = 0;
+                updateTimerDisplay();
+            } else if (game === 'fallingStars') {
+                document.getElementById('fallingStarsGame').classList.add('active');
+                stopTimer();
+                elapsedTime = 0;
+                updateTimerDisplay();
+            }
+        }
+
+        function startTimer() {
+            elapsedTime = 0;
+            stopTimer();
+            timerInterval = setInterval(() => {
+                elapsedTime++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const timerElements = document.querySelectorAll('#timer');
+            timerElements.forEach(el => {
+                el.textContent = `Time: ${elapsedTime}s`;
+            });
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplays = document.querySelectorAll('#score');
+        const gameOverDiv = document.getElementById('gameOver');
+        const gameWinDiv = document.getElementById('gameWin');
+        const finalScoreSpan = document.getElementById('finalScore');
+        
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 20,
+            color: '#E8E8E8'
+        };
+        
+        let stars = [];
+        let bombs = [];
+        let score = 0;
+        let gameActive = true;
+        let mouseX = player.x;
+        let mouseY = player.y;
+        let shakeAmount = 0;
+        let shakeTime = 0;
+        
+        function createStarSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'triangle';
+            
+            oscillator.frequency.setValueAtTime(1568, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(2093, audioContext.currentTime + 0.05);
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.8);
+        }
+        
+        function createExplosionSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+        
+        function startScreenShake() {
+            shakeAmount = 15;
+            shakeTime = 30;
+        }
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+        
+        function createStar() {
+            const minDistance = 30;
+            let attempts = 0;
+            let maxAttempts = 100;
+            let validPosition = false;
+            let newStar;
+            
+            while (!validPosition && attempts < maxAttempts) {
+                newStar = {
+                    x: Math.random() * (canvas.width - 30) + 15,
+                    y: Math.random() * (canvas.height - 30) + 15,
+                    radius: 12,
+                    color: '#D4D4D4'
+                };
+                
+                let tooClose = false;
+                
+                for (let bomb of bombs) {
+                    const dist = Math.sqrt(
+                        Math.pow(newStar.x - bomb.x, 2) + 
+                        Math.pow(newStar.y - bomb.y, 2)
+                    );
+                    if (dist < minDistance) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                
+                if (!tooClose) {
+                    validPosition = true;
+                }
+                
+                attempts++;
+            }
+            
+            if (validPosition) {
+                stars.push(newStar);
+            }
+        }
+        
+        function createBomb() {
+            const minDistance = 80;
+            const minDistanceFromBombs = 60;
+            let attempts = 0;
+            let maxAttempts = 100;
+            let validPosition = false;
+            let newBomb;
+            
+            while (!validPosition && attempts < maxAttempts) {
+                newBomb = {
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: Math.random() * (canvas.height - 40) + 20,
+                    radius: 14,
+                    color: '#8B0000'
+                };
+                
+                const distToPlayer = Math.sqrt(
+                    Math.pow(newBomb.x - player.x, 2) + 
+                    Math.pow(newBomb.y - player.y, 2)
+                );
+                
+                if (distToPlayer < minDistance) {
+                    attempts++;
+                    continue;
+                }
+                
+                let tooCloseToStar = false;
+                for (let star of stars) {
+                    const distToStar = Math.sqrt(
+                        Math.pow(newBomb.x - star.x, 2) + 
+                        Math.pow(newBomb.y - star.y, 2)
+                    );
+                    if (distToStar < minDistance) {
+                        tooCloseToStar = true;
+                        break;
+                    }
+                }
+                
+                if (tooCloseToStar) {
+                    attempts++;
+                    continue;
+                }
+                
+                let tooCloseToBomb = false;
+                for (let bomb of bombs) {
+                    const distToBomb = Math.sqrt(
+                        Math.pow(newBomb.x - bomb.x, 2) + 
+                        Math.pow(newBomb.y - bomb.y, 2)
+                    );
+                    if (distToBomb < minDistanceFromBombs) {
+                        tooCloseToBomb = true;
+                        break;
+                    }
+                }
+                
+                if (!tooCloseToBomb) {
+                    validPosition = true;
+                }
+                
+                attempts++;
+            }
+            
+            if (validPosition) {
+                bombs.push(newBomb);
+            }
+        }
+        
+        function checkCollision(obj1, obj2) {
+            const dx = obj1.x - obj2.x;
+            const dy = obj1.y - obj2.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < obj1.radius + obj2.radius;
+        }
+        
+        function drawStar(x, y, radius, color) {
+            const spikes = 5;
+            const outerRadius = radius;
+            const innerRadius = radius * 0.5;
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.translate(x, y);
+            ctx.moveTo(0, -outerRadius);
+            
+            for (let i = 0; i < spikes * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (Math.PI * i) / spikes - Math.PI / 2;
+                ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            }
+            
+            ctx.closePath();
+            
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, outerRadius);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(200, 200, 200, 0.8)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.9)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+            ctx.shadowBlur = 15;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        function drawBomb(x, y, radius, color) {
+            ctx.save();
+            
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            
+            const gradient = ctx.createRadialGradient(x - radius/3, y - radius/3, 0, x, y, radius);
+            gradient.addColorStop(0, '#CC0000');
+            gradient.addColorStop(0.7, '#8B0000');
+            gradient.addColorStop(1, '#660000');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(139, 0, 0, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y - radius);
+            ctx.lineTo(x + radius/2, y - radius - radius/2);
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(x + radius/2, y - radius - radius/2, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+            
+            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function drawPlayer(obj) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+            
+            const gradient = ctx.createRadialGradient(
+                obj.x - obj.radius/3, 
+                obj.y - obj.radius/3, 
+                0, 
+                obj.x, 
+                obj.y, 
+                obj.radius
+            );
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            gradient.addColorStop(0.5, 'rgba(200, 200, 200, 0.85)');
+            gradient.addColorStop(1, 'rgba(180, 180, 180, 0.9)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = 20;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        function gameLoop() {
+            if (!gameActive || currentGame !== 'starCollector') return;
+            
+            ctx.save();
+            
+            if (shakeTime > 0) {
+                const shakeX = (Math.random() - 0.5) * shakeAmount;
+                const shakeY = (Math.random() - 0.5) * shakeAmount;
+                ctx.translate(shakeX, shakeY);
+                shakeTime--;
+                shakeAmount *= 0.9;
+            }
+            
+            ctx.fillStyle = 'rgba(15, 15, 20, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const dx = mouseX - player.x;
+            const dy = mouseY - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 5) {
+                player.x += dx * sensitivity;
+                player.y += dy * sensitivity;
+            }
+            
+            drawPlayer(player);
+            
+            for (let i = stars.length - 1; i >= 0; i--) {
+                drawStar(stars[i].x, stars[i].y, stars[i].radius, stars[i].color);
+                
+                if (checkCollision(player, stars[i])) {
+                    stars.splice(i, 1);
+                    score += 10;
+                    document.querySelector('#starCollectorGame #score').textContent = 'Score: ' + score;
+                    createStarSound();
+                    
+                    if (score >= 10000) {
+                        winGame();
+                        ctx.restore();
+                        return;
+                    }
+                    
+                    createStar();
+                    if (score % 50 === 0) {
+                        createBomb();
+                    }
+                }
+            }
+            
+            for (let i = bombs.length - 1; i >= 0; i--) {
+                drawBomb(bombs[i].x, bombs[i].y, bombs[i].radius, bombs[i].color);
+                
+                if (checkCollision(player, bombs[i])) {
+                    createExplosionSound();
+                    startScreenShake();
+                    endGame();
+                    ctx.restore();
+                    return;
+                }
+            }
+            
+            ctx.restore();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame() {
+            gameActive = false;
+            stopTimer();
+            finalScoreSpan.textContent = score;
+            gameOverDiv.style.display = 'block';
+        }
+        
+        function winGame() {
+            gameActive = false;
+            stopTimer();
+            gameWinDiv.style.display = 'block';
+        }
+        
+        function restartGame() {
+            restartStarCollector();
+            gameOverDiv.style.display = 'none';
+            gameWinDiv.style.display = 'none';
+        }
+
+        function restartStarCollector() {
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            stars = [];
+            bombs = [];
+            score = 0;
+            gameActive = true;
+            shakeAmount = 0;
+            shakeTime = 0;
+            document.querySelector('#starCollectorGame #score').textContent = 'Score: 0';
+            startTimer();
+            
+            for (let i = 0; i < 5; i++) {
+                createStar();
+            }
+            createBomb();
+            
+            gameLoop();
+        }
+
+        let minesweeperBoard = [];
+        let minesweeperMines = [];
+        let minesweeperRevealed = 0;
+        let minesweeperTotal = 0;
+        let minesweeperActive = false;
+
+        function updateMineCount() {
+            const slider = document.getElementById('mineSlider');
+            const display = document.getElementById('mineCount');
+            display.textContent = slider.value;
+        }
+
+        function startMinesweeper() {
+            const mineCount = parseInt(document.getElementById('mineSlider').value) || 5;
+            const gridSize = 8;
+            const totalCells = gridSize * gridSize;
+            
+            if (mineCount >= totalCells) {
+                alert('Too many mines!');
+                return;
+            }
+
+            minesweeperBoard = [];
+            minesweeperMines = [];
+            minesweeperRevealed = 0;
+            minesweeperTotal = totalCells - mineCount;
+            minesweeperActive = true;
+
+            for (let i = 0; i < totalCells; i++) {
+                minesweeperBoard.push({ revealed: false, isMine: false });
+            }
+
+            const minePositions = new Set();
+            while (minePositions.size < mineCount) {
+                const pos = Math.floor(Math.random() * totalCells);
+                minePositions.add(pos);
+            }
+
+            minePositions.forEach(pos => {
+                minesweeperBoard[pos].isMine = true;
+                minesweeperMines.push(pos);
+            });
+
+            renderMinesweeperBoard(gridSize);
+            updateMinesweeperScore();
+            startTimer();
+        }
+
+        function renderMinesweeperBoard(gridSize) {
+            const board = document.getElementById('minesweeperBoard');
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 40px)`;
+            board.innerHTML = '';
+
+            minesweeperBoard.forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'mine-cell';
+                cellDiv.dataset.index = index;
+                cellDiv.addEventListener('click', () => revealCell(index, gridSize));
+                board.appendChild(cellDiv);
+            });
+        }
+
+        function revealCell(index, gridSize) {
+            if (!minesweeperActive) return;
+            
+            const cell = minesweeperBoard[index];
+            const cellDiv = document.querySelector(`[data-index="${index}"]`);
+
+            if (cell.revealed) return;
+
+            cell.revealed = true;
+            cellDiv.classList.add('revealed');
+
+            if (cell.isMine) {
+                cellDiv.classList.add('mine');
+                cellDiv.textContent = '💣';
+                createExplosionSound();
+                startScreenShake();
+                minesweeperGameOver();
+            } else {
+                cellDiv.classList.add('star');
+                cellDiv.textContent = '⭐';
+                createStarSound();
+                minesweeperRevealed++;
+                updateMinesweeperScore();
+
+                if (minesweeperRevealed === minesweeperTotal) {
+                    minesweeperWin();
+                }
+            }
+        }
+
+        function updateMinesweeperScore() {
+            document.querySelector('#minesweeperGame #score').textContent = 
+                `Cells: ${minesweeperRevealed}/${minesweeperTotal}`;
+        }
+
+        function minesweeperGameOver() {
+            minesweeperActive = false;
+            stopTimer();
+            
+            minesweeperBoard.forEach((cell, index) => {
+                if (cell.isMine) {
+                    const cellDiv = document.querySelector(`[data-index="${index}"]`);
+                    cellDiv.classList.add('mine');
+                    cellDiv.textContent = '💣';
+                }
+            });
+
+            setTimeout(() => {
+                finalScoreSpan.textContent = minesweeperRevealed;
+                gameOverDiv.style.display = 'block';
+            }, 500);
+        }
+
+        function minesweeperWin() {
+            minesweeperActive = false;
+            stopTimer();
+            setTimeout(() => {
+                gameWinDiv.style.display = 'block';
+            }, 500);
+        }
+
+        const fallingCanvas = document.getElementById('fallingCanvas');
+        const fallingCtx = fallingCanvas.getContext('2d');
+        let fallingObjects = [];
+        let fallingScore = 0;
+        let fallingActive = false;
+        let fallingAnimationId = null;
+        let fallingSpeedMultiplier = 1;
+
+        function startFallingStars() {
+            fallingObjects = [];
+            fallingScore = 0;
+            fallingActive = true;
+            fallingSpeedMultiplier = 1;
+            document.querySelector('#fallingStarsGame #score').textContent = 'Score: 0';
+            startTimer();
+            spawnFallingObject();
+            fallingGameLoop();
+        }
+
+        function spawnFallingObject() {
+            if (!fallingActive) return;
+
+            const isStar = Math.random() > 0.25;
+            const size = 25;
+            
+            fallingObjects.push({
+                x: Math.random() * (fallingCanvas.width - size * 2) + size,
+                y: -size,
+                size: size,
+                speed: (1 + Math.random() * 0.5) * fallingSpeedMultiplier,
+                isStar: isStar
+            });
+
+            setTimeout(() => spawnFallingObject(), 1200 - (fallingSpeedMultiplier * 100));
+        }
+
+        fallingCanvas.addEventListener('click', (e) => {
+            if (!fallingActive) return;
+            
+            const rect = fallingCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            for (let i = fallingObjects.length - 1; i >= 0; i--) {
+                const obj = fallingObjects[i];
+                const dx = clickX - obj.x;
+                const dy = clickY - obj.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < obj.size * 1.5) {
+                    if (obj.isStar) {
+                        fallingScore += 10;
+                        document.querySelector('#fallingStarsGame #score').textContent = 'Score: ' + fallingScore;
+                        createStarSound();
+                        fallingObjects.splice(i, 1);
+                        
+                        if (fallingScore % 100 === 0 && fallingSpeedMultiplier < 3) {
+                            fallingSpeedMultiplier += 0.2;
+                        }
+                    } else {
+                        createExplosionSound();
+                        startScreenShake();
+                        fallingGameOver();
+                    }
+                    return;
+                }
+            }
+        });
+
+        function fallingGameLoop() {
+            if (!fallingActive) return;
+
+            fallingCtx.fillStyle = 'rgba(15, 15, 20, 0.3)';
+            fallingCtx.fillRect(0, 0, fallingCanvas.width, fallingCanvas.height);
+
+            for (let i = fallingObjects.length - 1; i >= 0; i--) {
+                const obj = fallingObjects[i];
+                obj.y += obj.speed;
+
+                if (obj.y - obj.size > fallingCanvas.height) {
+                    if (obj.isStar) {
+                        fallingGameOver();
+                        return;
+                    } else {
+                        fallingObjects.splice(i, 1);
+                    }
+                    continue;
+                }
+
+                if (obj.isStar) {
+                    drawFallingStar(obj.x, obj.y, obj.size);
+                } else {
+                    drawFallingBomb(obj.x, obj.y, obj.size);
+                }
+            }
+
+            fallingAnimationId = requestAnimationFrame(fallingGameLoop);
+        }
+
+        function drawFallingStar(x, y, size) {
+            const spikes = 5;
+            const outerRadius = size;
+            const innerRadius = size * 0.5;
+            
+            fallingCtx.save();
+            fallingCtx.translate(x, y);
+            fallingCtx.beginPath();
+            fallingCtx.moveTo(0, -outerRadius);
+            
+            for (let i = 0; i < spikes * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (Math.PI * i) / spikes - Math.PI / 2;
+                fallingCtx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+            }
+            
+            fallingCtx.closePath();
+            
+            const gradient = fallingCtx.createRadialGradient(0, 0, 0, 0, 0, outerRadius);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(200, 200, 200, 0.8)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.9)');
+            
+            fallingCtx.fillStyle = gradient;
+            fallingCtx.fill();
+            
+            fallingCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            fallingCtx.lineWidth = 2;
+            fallingCtx.stroke();
+            
+            fallingCtx.restore();
+        }
+
+        function drawFallingBomb(x, y, size) {
+            const radius = size * 0.7;
+            
+            fallingCtx.save();
+            fallingCtx.beginPath();
+            fallingCtx.arc(x, y, radius, 0, Math.PI * 2);
+            
+            const gradient = fallingCtx.createRadialGradient(x - radius/3, y - radius/3, 0, x, y, radius);
+            gradient.addColorStop(0, '#CC0000');
+            gradient.addColorStop(0.7, '#8B0000');
+            gradient.addColorStop(1, '#660000');
+            
+            fallingCtx.fillStyle = gradient;
+            fallingCtx.fill();
+            
+            fallingCtx.strokeStyle = 'rgba(139, 0, 0, 0.8)';
+            fallingCtx.lineWidth = 2;
+            fallingCtx.stroke();
+            
+            fallingCtx.beginPath();
+            fallingCtx.moveTo(x, y - radius);
+            fallingCtx.lineTo(x + radius/2, y - radius - radius/2);
+            fallingCtx.strokeStyle = '#8B4513';
+            fallingCtx.lineWidth = 3;
+            fallingCtx.stroke();
+            
+            fallingCtx.beginPath();
+            fallingCtx.arc(x + radius/2, y - radius - radius/2, 3, 0, Math.PI * 2);
+            fallingCtx.fillStyle = '#FFD700';
+            fallingCtx.fill();
+            
+            fallingCtx.restore();
+        }
+
+        function fallingGameOver() {
+            fallingActive = false;
+            stopTimer();
+            if (fallingAnimationId) {
+                cancelAnimationFrame(fallingAnimationId);
+            }
+            setTimeout(() => {
+                finalScoreSpan.textContent = fallingScore;
+                gameOverDiv.style.display = 'block';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
